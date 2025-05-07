@@ -13,20 +13,30 @@ export default function Student() {
     const [address, setAddress] = useState('')
     const [students, setStudents] = useState([])
     const [editingId, seteditingId] = useState(null);
+    const [error, setError] = useState(false)
 
     const handleSubmit = e => {
         e.preventDefault()
-        const student = {name, address}
+       
+        
         if(editingId === null) {
-            fetch('http://localhost:8080/student/add', {
-                method: "POST",
-                headers:{"Content-Type":"application/json"},
-                body:JSON.stringify(student)
-            })
-            .then(() => {
-                setName('')
-                setAddress('')
-            })
+            let student = null
+            if(name.trim() === '' && address.trim() === '') {
+                setError(true)
+            } else {
+                setError(false)
+                student = {name, address}
+                fetch('http://localhost:8080/student/add', {
+                    method: "POST",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify(student)
+                })
+                .then(() => {
+                    setName('')
+                    setAddress('')
+                })
+            }
+          
         } else {
             fetch(`http://localhost:8080/student/edit/${editingId}`, {
             method: "PUT",
@@ -73,20 +83,31 @@ export default function Student() {
     
     <Container>
         <Paper elevation={3} style={paperSytle}>
-            <h1 style={{color:"blue"}}><u>Add Student</u></h1>
+            <h1>Add Student</h1>
         <Box
             component="form"
             sx={{ '& > :not(style)': { m: 1 } }}
             noValidate
             autoComplete="off"
             >
-            <TextField id="outlined-basic" label="Student Name" variant="outlined" fullWidth
-            value={name}
-            onChange={e => setName(e.target.value)}
+            <TextField 
+                error={error}
+                id="outlined-error-helper-text"
+                helperText= {error ? "Name is required" : ""}
+                label="Student Name" 
+                fullWidth
+                value={name}
+                onChange={e => setName(e.target.value)}
             />
-            <TextField id="outlined-basic" label="Student Address" variant="outlined" fullWidth
-            value={address}
-            onChange={e => setAddress(e.target.value)}
+            <TextField 
+                error={error}
+                helperText= {error ? "Address is required" : ""}
+                id="outlined-basic" 
+                label="Student Address" 
+                variant="outlined" 
+                fullWidth 
+                value={address}
+                onChange={e => setAddress(e.target.value)}
             />
         </Box>
         <Button variant="contained" onClick={handleSubmit}>{editingId === null ? "Submit" : "Update" }</Button>
@@ -95,13 +116,13 @@ export default function Student() {
             <h1>Students</h1>
             {students.map(student => (
                 <Paper elevation={6} style={{width:"80%", margin:"10px", padding:"15px", textAlign:"left"}} key={student.id}>
-                    id: {student.id} <br/>
-                    Name: {student.name} <br/>
-                    Address: {student.address}
-                    <Button variant="outlined" startIcon={<DeleteIcon />} onClick={() => handleDelete(student.id)}>
+                    <Box><b>id: </b>{student.id}</Box> <br/>
+                    <Box><b>Name: </b> {student.name} </Box><br/>
+                    <Box><b>Address: </b> {student.address}</Box><br/>
+                    <Button size='small' variant="outlined" startIcon={<DeleteIcon />} onClick={() => handleDelete(student.id)}>
                         Delete
                     </Button>
-                    <Button variant="outlined" startIcon={<EditIcon />} onClick={() => handleUpdate(student.id)} >
+                    <Button size='small' variant="outlined" startIcon={<EditIcon />} onClick={() => handleUpdate(student.id)} >
                         Update
                     </Button>
                 </Paper>
