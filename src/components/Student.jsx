@@ -17,44 +17,54 @@ export default function Student() {
     const [loading, setLoading] = useState(false)
     const [noStudents, setNoStudents] = useState(true)
 
+    const inputValidation = (fields) => {
+        //use Object.values to get an array of values
+        // .every() checks that every value is non empty after trimming
+        return Object.values(fields).every(value => value.trim() !== '');
+    }
+
     const handleSubmit = e => {
         e.preventDefault()
-       
-        
+        const student = {name, address}
+        let isValid = inputValidation(student)
+        if(!isValid) {
+            setError(true)
+            return;
+        }
+        setError(false)
         if(editingId === null) {
-            let student = null
-            if(name.trim() === '' && address.trim() === '') {
-                setError(true)
-            } else {
-                setError(false)
-                student = {name, address}
-                fetch('http://localhost:8080/student/add', {
-                    method: "POST",
-                    headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify(student)
-                })
-                .then(res => res.json())
-                .then(addedStudent => {
-                  // Add to local list without refetching
-                    setStudents(prev => [...prev, addedStudent]);
-                })
-                .then(() => {
-                    setName('')
-                    setAddress('')
-                })
-            }
-          
+            fetch('http://localhost:8080/student/add', {
+                method: "POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify(student)
+            })
+            .then(res => res.json())
+            .then(addedStudent => {
+                // Add to local list without refetching
+                setStudents(prev => [...prev, addedStudent]);
+            })
+            .then(() => {
+                setName('')
+                setAddress('')
+            })
+            .catch(err => console.log('Failed to add student:', err))
+            // preferably show an error message to the user
+            
         } else {
             fetch(`http://localhost:8080/student/edit/${editingId}`, {
             method: "PUT",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify(student)
         })
+        //merge it with other students
         .then(() => {
+            setStudents(prev => prev.map(s => s.id === editingId ? {...s, name, address} : s))
             setName('')
             setAddress('')
             seteditingId(null)
         })
+        .catch(err => console.log("Failed to update student:", err))
+        // preferably show an error message to the user
         }
     }
     const handleDelete = id => {
@@ -88,6 +98,7 @@ export default function Student() {
         //   .catch(err => console.error("Fetch error:", err))
           .finally(() => setLoading(false));
       }, []);
+
       useEffect(() => {
         setNoStudents(students.length === 0);
       }, [students]);
